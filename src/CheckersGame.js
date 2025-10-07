@@ -88,28 +88,28 @@ export class CheckersGame {
 
         if (piece.isKing) {
             directions.push(
-                { dr: -1, dc: -1 }, { dr: -1, dc: 1 },
-                { dr: 1, dc: -1 }, { dr: 1, dc: 1 }
+                { rowDirection: -1, colDirection: -1 }, { rowDirection: -1, colDirection: 1 },
+                { rowDirection: 1, colDirection: -1 }, { rowDirection: 1, colDirection: 1 }
             );
         } else {
             if (piece.color === 'red') {
-                directions.push({ dr: -1, dc: -1 }, { dr: -1, dc: 1 });
+                directions.push({ rowDirection: -1, colDirection: -1 }, { rowDirection: -1, colDirection: 1 });
             }
             if (piece.color === 'black') {
-                directions.push({ dr: 1, dc: -1 }, { dr: 1, dc: 1 });
+                directions.push({ rowDirection: 1, colDirection: -1 }, { rowDirection: 1, colDirection: 1 });
             }
         }
 
-        for (const { dr, dc } of directions) {
-            const newRow = row + dr;
-            const newCol = col + dc;
+        for (const { rowDirection, colDirection } of directions) {
+            const newRow = row + rowDirection; 
+            const newCol = col + colDirection;
             // Normal move
             if (this.isOnBoard(newRow, newCol) && !this.board[newRow][newCol]) {
                 moves.push({ row: newRow, col: newCol });
             }
             // Capture move
-            const jumpRow = row + 2 * dr;
-            const jumpCol = col + 2 * dc;
+            const jumpRow = row + 2 * rowDirection;
+            const jumpCol = col + 2 * colDirection;
             if (this.isOnBoard(jumpRow, jumpCol) &&
                 !this.board[jumpRow][jumpCol] &&
                 this.board[newRow][newCol] &&
@@ -128,7 +128,7 @@ export class CheckersGame {
      */
     makeMove(row, col) {
         if (!this.selectedPiece) return false;
-        const move = this.validMoves.find(m => m.row === row && m.col === col);
+        const move = this.validMoves.find(m => m.row === row && m.col === col); // Find the move in validMoves
         if (!move) return false; 
 
         const { row: fromRow, col: fromCol } = this.selectedPiece;
