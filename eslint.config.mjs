@@ -11,6 +11,7 @@ export default defineConfig([{
         sourceType: "module",
         globals: {
             ...globals.browser,
+            THREE: "readonly",
         },
     },
 
