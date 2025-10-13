@@ -10,6 +10,7 @@
             align-items: center;
             background-color: #f0f0f0;
             margin: 0;
+            padding: 100px;
         }
 
         h1 {
@@ -40,11 +41,25 @@
         button:hover {
             background-color: #5a6268;
         }
+
+        #overheadView {
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            width: 200px;
+            height: 200px;
+            border: 3px solid #333;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
     </style>
     <title>Checkers 3D</title>
 </head>
 <body>
     <h1>Checkers 3D</h1>
+    <div id="overheadView"></div>
     <button class="reset-btn" id="resetButton3D">Reset Game</button>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
