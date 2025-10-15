@@ -4,14 +4,21 @@
 
 import { CheckersGame } from './CheckersGame.js';
 
-let scene, camera, renderer, controls;
-let overheadViewCamera, overheadViewRenderer;
-let game;
-let boardSquares = [];
-let pieces = [];
-let raycaster, mouse;
-let selectedSquareMaterial, validMoveMaterial;
-let isInitialized = false;
+let scene
+let camera
+let renderer
+let controls
+let overheadViewCamera
+let overheadViewRenderer
+let game
+let boardSquares = []
+let pieces = [] 
+let ghostPieces = []
+let raycaster
+let mouse
+let selectedSquareMaterial, validMoveMaterial
+let selectedPiecePointLight
+let isInitialized = false
 
 /**
  * Load the game and render the board
@@ -42,7 +49,7 @@ window.addEventListener('load', () => {
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     
-
+    
     const existingCanvases = document.body.querySelectorAll('canvas');
     existingCanvases.forEach(canvas => {
         if (canvas.parentNode === document.body) {
@@ -71,6 +78,10 @@ window.addEventListener('load', () => {
     renderer.domElement.addEventListener('click', onMouseClick, false);
 
     updateBoardHighlighting();
+    
+    // Set initial camera perspective for red player
+    switchCameraPerspective();
+    
     animate();
 
     window.addEventListener('resize', onWindowResize, false);
@@ -80,10 +91,7 @@ window.addEventListener('load', () => {
      */
     document.getElementById('resetButton3D').addEventListener('click', () => {
         game.reset();
-        camera.position.set(0, 8, 10);
-        camera.lookAt(0, 0, 0);
-        controls.target.set(0, 0, 0);
-        controls.update();
+        switchCameraPerspective(); // Set camera to red player's perspective
         render3D();
     });
 
@@ -102,10 +110,31 @@ window.addEventListener('load', () => {
      */
     function handleSquareClick(row, col) {
         if (game.isGameOver) { return; }
+        const previousPlayer = game.currentPlayer;
         if (!game.selectPiece(row, col) && !game.makeMove(row, col)) {
             game.deselectPiece();
         }
+        // Check if player switched after move
+        if (previousPlayer !== game.currentPlayer) {
+            switchCameraPerspective();
+        }
         render3D();
+    }
+
+    /**
+     * Switch camera perspective based on current player
+     */
+    function switchCameraPerspective() {
+        const currentPlayer = game.currentPlayer;
+        
+        if (currentPlayer === 'red') {
+            camera.position.set(0, 8, 10);
+            controls.target.set(0, 0, 0);
+        } else {
+            camera.position.set(0, 8, -10);
+            controls.target.set(0, 0, 0);
+        }
+        controls.update();
     }
 
     /**
@@ -123,30 +152,30 @@ window.addEventListener('load', () => {
         tableTop.receiveShadow = true;
         tableGroup.add(tableTop);
 
-        const legGeometry = new THREE.BoxGeometry(1.0, 2.0, 1.0);
+        const legGeometry = new THREE.BoxGeometry(1.0, 3.5, 1.0);
         const legMaterial = new THREE.MeshLambertMaterial({ color: 0x654321 });
 
         // Front left leg
         const leg1 = new THREE.Mesh(legGeometry, legMaterial);
-        leg1.position.set(-6.3, -1.0, 6.3);
+        leg1.position.set(-6.3, -1.75, 6.3);
         leg1.castShadow = true;
         tableGroup.add(leg1);
 
         // Front right leg
         const leg2 = new THREE.Mesh(legGeometry, legMaterial);
-        leg2.position.set(6.3, -1.0, 6.3);
+        leg2.position.set(6.3, -1.75, 6.3);
         leg2.castShadow = true;
         tableGroup.add(leg2);
 
         // Back left leg
         const leg3 = new THREE.Mesh(legGeometry, legMaterial);
-        leg3.position.set(-6.3, -1.0, -6.3);
+        leg3.position.set(-6.3, -1.75, -6.3);
         leg3.castShadow = true;
         tableGroup.add(leg3);
 
         // Back right leg
         const leg4 = new THREE.Mesh(legGeometry, legMaterial);
-        leg4.position.set(6.3, -1.0, -6.3);
+        leg4.position.set(6.3, -1.75, -6.3);
         leg4.castShadow = true;
         tableGroup.add(leg4);
         
@@ -173,13 +202,15 @@ window.addEventListener('load', () => {
             for (let col = 0; col < boardSize; col++) {
                 const isLightSquare = (row + col) % 2 === 0;
                 
-                const squareGeometry = new THREE.BoxGeometry(squareSize, 0.08, squareSize);
+                // Increased height from 0.08 to 0.25 for more depth
+                const squareGeometry = new THREE.BoxGeometry(squareSize, 0.25, squareSize);
                 const squareMaterial = isLightSquare ? lightSquareMaterial : darkSquareMaterial;
                 const square = new THREE.Mesh(squareGeometry, squareMaterial);
                 
                 const x = (col * squareSize) - boardOffset;
                 const z = (row * squareSize) - boardOffset;
-                square.position.set(x, 0.125, z);
+                // Adjusted y position to account for increased height
+                square.position.set(x, 0.275, z);
                 
                 square.userData = { row, col, originalMaterial: squareMaterial };
                 boardSquares[row][col] = square;
@@ -199,14 +230,16 @@ window.addEventListener('load', () => {
      */
     function createBoardBorder(squareSize, boardSize, boardOffset) {
         const borderWidth = 0.2;
-        const borderHeight = 0.12;
+        // Increased border height from 0.12 to 0.3 to match the new board depth
+        const borderHeight = 0.3;
         const totalBoardSize = boardSize * squareSize;
         const borderMaterial = new THREE.MeshLambertMaterial({ color: 0x000000 });
 
         // Top border
         const topBorderGeometry = new THREE.BoxGeometry(totalBoardSize + borderWidth * 2, borderHeight, borderWidth);
         const topBorder = new THREE.Mesh(topBorderGeometry, borderMaterial);
-        topBorder.position.set(0, 0.125, -boardOffset - squareSize/2 - borderWidth/2);
+        // Adjusted y position from 0.125 to 0.275 to match new board height
+        topBorder.position.set(0, 0.275, -boardOffset - squareSize/2 - borderWidth/2);
         topBorder.castShadow = true;
         topBorder.receiveShadow = true;
         scene.add(topBorder);
@@ -214,7 +247,7 @@ window.addEventListener('load', () => {
         // Bottom border
         const bottomBorderGeometry = new THREE.BoxGeometry(totalBoardSize + borderWidth * 2, borderHeight, borderWidth);
         const bottomBorder = new THREE.Mesh(bottomBorderGeometry, borderMaterial);
-        bottomBorder.position.set(0, 0.125, boardOffset + squareSize/2 + borderWidth/2);
+        bottomBorder.position.set(0, 0.275, boardOffset + squareSize/2 + borderWidth/2);
         bottomBorder.castShadow = true;
         bottomBorder.receiveShadow = true;
         scene.add(bottomBorder);
@@ -222,7 +255,7 @@ window.addEventListener('load', () => {
         // Left border
         const leftBorderGeometry = new THREE.BoxGeometry(borderWidth, borderHeight, totalBoardSize);
         const leftBorder = new THREE.Mesh(leftBorderGeometry, borderMaterial);
-        leftBorder.position.set(-boardOffset - squareSize/2 - borderWidth/2, 0.125, 0);
+        leftBorder.position.set(-boardOffset - squareSize/2 - borderWidth/2, 0.275, 0);
         leftBorder.castShadow = true;
         leftBorder.receiveShadow = true;
         scene.add(leftBorder);
@@ -230,7 +263,7 @@ window.addEventListener('load', () => {
         // Right border
         const rightBorderGeometry = new THREE.BoxGeometry(borderWidth, borderHeight, totalBoardSize);
         const rightBorder = new THREE.Mesh(rightBorderGeometry, borderMaterial);
-        rightBorder.position.set(boardOffset + squareSize/2 + borderWidth/2, 0.125, 0);
+        rightBorder.position.set(boardOffset + squareSize/2 + borderWidth/2, 0.275, 0);
         rightBorder.castShadow = true;
         rightBorder.receiveShadow = true;
         scene.add(rightBorder);
@@ -278,7 +311,8 @@ window.addEventListener('load', () => {
                     
                     const x = (col * squareSize) - boardOffset;
                     const z = (row * squareSize) - boardOffset;
-                    piece.position.set(x, 0.2, z); 
+                    // Adjusted y position from 0.2 to 0.475 to sit on top of the thicker board
+                    piece.position.set(x, 0.475, z); 
                     
                     piece.userData = { row, col, color: gamepiece.color, isKing: gamepiece.isKing };
                     pieces[row][col] = piece;
@@ -339,6 +373,7 @@ window.addEventListener('load', () => {
         }
         
         overheadViewContainer.appendChild(overheadViewRenderer.domElement);
+        overheadViewRenderer.domElement.addEventListener('click', onOverheadViewClick, false);
     }
 
     /**
@@ -361,6 +396,14 @@ window.addEventListener('load', () => {
      * Clear all pieces from the scene
      */
     function clearPieces() {
+        if (selectedPiecePointLight) {
+            scene.remove(selectedPiecePointLight);
+            selectedPiecePointLight = null;
+        }
+        
+        // Clear ghost pieces
+        clearGhostPieces();
+        
         if (pieces) {
             for (let row = 0; row < pieces.length; row++) {
                 for (let col = 0; col < pieces[row].length; col++) {
@@ -374,9 +417,87 @@ window.addEventListener('load', () => {
     }
 
     /**
+     * Clear all ghost pieces from the scene
+     */
+    function clearGhostPieces() {
+        ghostPieces.forEach(ghostPiece => {
+            if (ghostPiece) {
+                // Remove the ghost light if it exists
+                if (ghostPiece.userData.ghostLight) {
+                    scene.remove(ghostPiece.userData.ghostLight);
+                }
+                scene.remove(ghostPiece);
+            }
+        });
+        ghostPieces = [];
+    }
+
+    /**
+     * Create ghost pieces on valid move squares
+     */
+    function createGhostPieces() {
+        clearGhostPieces();
+        
+        if (!game.selectedPiece || game.validMoves.length === 0) {
+            return;
+        }
+
+        const { row: selectedRow, col: selectedCol } = game.selectedPiece;
+        const selectedPiece = pieces[selectedRow][selectedCol];
+        
+        if (!selectedPiece) return;
+
+        const squareSize = 1.3;
+        const boardSize = 8;
+        const boardOffset = (boardSize - 1) * squareSize / 2;
+        const pieceRadius = 0.5;
+        const pieceHeight = 0.15;
+        
+
+        let ghostMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x66ff66,
+            emissive: 0x003300,
+            transparent: true, 
+            opacity: 0.6,
+            roughness: 0.3,
+            metalness: 0.1
+        });
+
+        const ghostGeometry = new THREE.CylinderGeometry(pieceRadius, pieceRadius, pieceHeight, 16);
+
+        game.validMoves.forEach(move => {
+            const ghostPiece = new THREE.Mesh(ghostGeometry, ghostMaterial);
+            
+            const x = (move.col * squareSize) - boardOffset;
+            const z = (move.row * squareSize) - boardOffset;
+            ghostPiece.position.set(x, 0.475, z);
+            
+            const ghostLight = new THREE.PointLight(0x00ff00, 0.8, 3, 2);
+            ghostLight.position.set(x, 0.6, z);
+            
+            ghostPiece.userData = { 
+                row: move.row, 
+                col: move.col, 
+                isGhost: true,
+                ghostLight: ghostLight
+            };
+            
+            ghostPieces.push(ghostPiece);
+            scene.add(ghostPiece);
+            scene.add(ghostLight);
+        });
+    }
+
+    /**
      * Update board square highlighting based on game state
      */
     function updateBoardHighlighting() {
+        if (selectedPiecePointLight) {
+            scene.remove(selectedPiecePointLight);
+            selectedPiecePointLight = null;
+        }
+        clearGhostPieces();
+
         for (let row = 0; row < 8; row++) {
             for (let col = 0; col < 8; col++) {
                 const square = boardSquares[row][col];
@@ -386,22 +507,31 @@ window.addEventListener('load', () => {
             }
         }
 
-        // Highlight selected piece square
         if (game.selectedPiece) {
             const { row, col } = game.selectedPiece;
             const square = boardSquares[row][col];
             if (square) {
                 square.material = selectedSquareMaterial;
             }
+            
+            const selectedPiece = pieces[row][col];
+            if (selectedPiece) {
+                selectedPiecePointLight = new THREE.PointLight(0xffffff, 0.8, 8, 2);
+                selectedPiecePointLight.position.copy(selectedPiece.position);
+                selectedPiecePointLight.position.y += 0.1;
+
+                scene.add(selectedPiecePointLight);
+            }
         }
 
-        // Highlight valid move squares
         game.validMoves.forEach(move => {
             const square = boardSquares[move.row][move.col];
             if (square) {
                 square.material = validMoveMaterial;
             }
         });
+
+        createGhostPieces();
     }
 
     /**
@@ -415,6 +545,30 @@ window.addEventListener('load', () => {
         mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
         raycaster.setFromCamera(mouse, camera);
+
+        const intersects = raycaster.intersectObjects(scene.children);
+
+        if (intersects.length > 0) {
+            const intersected = intersects[0].object;
+            
+            if (intersected.userData && typeof intersected.userData.row !== 'undefined') {
+                const { row, col } = intersected.userData;
+                handleSquareClick(row, col);
+            }
+        }
+    }
+
+    /**
+     * Handle mouse clicks on the overhead view for piece selection and movement
+     */
+    function onOverheadViewClick(event) {
+        event.preventDefault();
+
+        const rect = overheadViewRenderer.domElement.getBoundingClientRect();
+        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, overheadViewCamera);
 
         const intersects = raycaster.intersectObjects(scene.children);
 
