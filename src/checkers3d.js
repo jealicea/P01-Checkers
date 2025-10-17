@@ -311,6 +311,7 @@ window.addEventListener('load', () => {
     /**
      * Adds lighting to the scene
      * TODO: Improve lighting, fix the material bug, and add glow effects 
+     * for selected pieces and valid move indicators.
      */
     function addLighting() {
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
@@ -331,6 +332,7 @@ window.addEventListener('load', () => {
         spotlight.shadow.camera.fov = 45;
         scene.add(spotlight);
         scene.add(spotlight.target);
+
     }
 
     /**
