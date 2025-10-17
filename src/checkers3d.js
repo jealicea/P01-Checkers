@@ -3,6 +3,7 @@
  */
 
 import { CheckersGame } from './CheckersGame.js';
+import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
 
 let scene
 let camera
@@ -27,6 +28,8 @@ let tableGroup
 window.addEventListener('load', () => {
 
     game = new CheckersGame();
+
+    const crownSVG = new SVGLoader().loadAsync('crown.svg');
 
     raycaster = new THREE.Raycaster();
     mouse = new THREE.Vector2();
