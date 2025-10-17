@@ -276,8 +276,8 @@ window.addEventListener('load', () => {
 
         const redPieceMaterial = new THREE.MeshLambertMaterial({ color: 0xdc3545 });
         const blackPieceMaterial = new THREE.MeshLambertMaterial({ color: 0x343a40 }); 
-        const redKingMaterial = new THREE.MeshLambertMaterial({ color: 0xff6b7a }); 
-        const blackKingMaterial = new THREE.MeshLambertMaterial({ color: 0x6c757d });
+        const redKingMaterial = new THREE.MeshLambertMaterial({ color: 0xffd700 });
+        const blackKingMaterial = new THREE.MeshLambertMaterial({ color: 0xc0c0c0 }); 
 
         const pieceGeometry = new THREE.CylinderGeometry(pieceRadius, pieceRadius, pieceHeight, 16);
         
