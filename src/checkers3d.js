@@ -310,6 +310,7 @@ window.addEventListener('load', () => {
 
     /**
      * Adds lighting to the scene
+     * TODO: Improve lighting, fix the material bug, and add glow effects 
      */
     function addLighting() {
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
@@ -413,6 +414,7 @@ window.addEventListener('load', () => {
 
     /**
      * Create ghost pieces on valid move squares
+     * TODO: Improve the ghost piece material so the board doesnt disappear under them.
      */
     function createGhostPieces() {
         clearGhostPieces();

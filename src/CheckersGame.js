@@ -126,7 +126,11 @@ export class CheckersGame {
             this.board[newRow][newCol].color !== piece.color) {
             moves.push({ row: jumpRow, col: jumpCol, capture: { row: newRow, col: newCol } });
         }
-    }    /**
+        // TODO: Implement force Jumps and Multi-Jumps
+
+    }
+
+    /**
      * Make a move for the selected piece.
      * @param {number} row 
      * @param {number} col 
