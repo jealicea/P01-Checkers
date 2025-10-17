@@ -73,7 +73,7 @@ export class CheckersGame {
     }
 
 
-    /** 
+    /**
      * Get valid moves for a piece at (row, col).
      * @param {number} row 
      * @param {number} col 
@@ -84,43 +84,49 @@ export class CheckersGame {
         if (!piece) return [];
 
         const moves = [];
-        const directions = [];
 
         if (piece.isKing) {
-            directions.push(
-                { rowDirection: -1, colDirection: -1 }, { rowDirection: -1, colDirection: 1 },
-                { rowDirection: 1, colDirection: -1 }, { rowDirection: 1, colDirection: 1 }
-            );
+            // Kings can move in all four diagonal directions
+            this.checkDirection(row, col, -1, -1, moves);
+            this.checkDirection(row, col, -1, 1, moves);
+            this.checkDirection(row, col, 1, -1, moves);
+            this.checkDirection(row, col, 1, 1, moves);
         } else {
             if (piece.color === 'red') {
-                directions.push({ rowDirection: -1, colDirection: -1 }, { rowDirection: -1, colDirection: 1 });
+                // Red pieces move towards row 0
+                this.checkDirection(row, col, -1, -1, moves);
+                this.checkDirection(row, col, -1, 1, moves);
             }
             if (piece.color === 'black') {
-                directions.push({ rowDirection: 1, colDirection: -1 }, { rowDirection: 1, colDirection: 1 });
+                // Black pieces move towards row 7
+                this.checkDirection(row, col, 1, -1, moves);
+                this.checkDirection(row, col, 1, 1, moves);
             }
         }
 
-        for (const { rowDirection, colDirection } of directions) {
-            const newRow = row + rowDirection; 
-            const newCol = col + colDirection;
-            // Normal move
-            if (this.isOnBoard(newRow, newCol) && !this.board[newRow][newCol]) {
-                moves.push({ row: newRow, col: newCol });
-            }
-            // Capture move
-            const jumpRow = row + 2 * rowDirection;
-            const jumpCol = col + 2 * colDirection;
-            if (this.isOnBoard(jumpRow, jumpCol) &&
-                !this.board[jumpRow][jumpCol] &&
-                this.board[newRow][newCol] &&
-                this.board[newRow][newCol].color !== piece.color) {
-                moves.push({ row: jumpRow, col: jumpCol, capture: { row: newRow, col: newCol } });
-            }
-        }
         return moves;
     }
 
-    /**
+    checkDirection(row, col, rowDir, colDir, moves) {
+        const piece = this.board[row][col];
+        const newRow = row + rowDir; 
+        const newCol = col + colDir;
+
+        // Normal move
+        if (this.isOnBoard(newRow, newCol) && !this.board[newRow][newCol]) {
+            moves.push({ row: newRow, col: newCol });
+        }
+
+        // Capture move
+        const jumpRow = row + 2 * rowDir;
+        const jumpCol = col + 2 * colDir;
+        if (this.isOnBoard(jumpRow, jumpCol) &&
+            !this.board[jumpRow][jumpCol] &&
+            this.board[newRow][newCol] &&
+            this.board[newRow][newCol].color !== piece.color) {
+            moves.push({ row: jumpRow, col: jumpCol, capture: { row: newRow, col: newCol } });
+        }
+    }    /**
      * Make a move for the selected piece.
      * @param {number} row 
      * @param {number} col 
@@ -128,10 +134,19 @@ export class CheckersGame {
      */
     makeMove(row, col) {
         if (!this.selectedPiece) return false;
-        const move = this.validMoves.find(m => m.row === row && m.col === col); // Find the move in validMoves
+
+        // Find the move in validMoves
+        let move = null;
+        for (let i = 0; i < this.validMoves.length; i++) {
+            if (this.validMoves[i].row === row && this.validMoves[i].col === col) {
+                move = this.validMoves[i];
+                break;
+            }
+        }
         if (!move) return false; 
 
-        const { row: fromRow, col: fromCol } = this.selectedPiece;
+        const fromRow = this.selectedPiece.row;
+        const fromCol = this.selectedPiece.col;
         const piece = this.board[fromRow][fromCol];
 
         // Move piece

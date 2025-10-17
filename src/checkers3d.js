@@ -12,22 +12,19 @@ let overheadViewCamera
 let overheadViewRenderer
 let game
 let boardSquares = []
-let pieces = [] 
+let pieces = []
 let ghostPieces = []
 let raycaster
 let mouse
-let selectedSquareMaterial, validMoveMaterial
+let selectedSquareMaterial
+let validMoveMaterial
 let selectedPiecePointLight
-let isInitialized = false
+let tableGroup
 
 /**
- * Load the game and render the board
+ * Loads the game and renders the board
  */
 window.addEventListener('load', () => {
-    if (isInitialized) {
-        return;
-    }
-    isInitialized = true;
 
     game = new CheckersGame();
 
@@ -70,7 +67,7 @@ window.addEventListener('load', () => {
     controls.maxDistance = 60;
     controls.maxPolarAngle = Math.PI / 2;
 
-    createTable();
+    tableGroup = createTable();
     createCheckersBoard();
     createCheckersPieces();
     addLighting();
@@ -78,20 +75,14 @@ window.addEventListener('load', () => {
     renderer.domElement.addEventListener('click', onMouseClick, false);
 
     updateBoardHighlighting();
-    
-    // Set initial camera perspective for red player
     switchCameraPerspective();
-    
     animate();
 
     window.addEventListener('resize', onWindowResize, false);
 
-    /**
-     * Reset the game
-     */
     document.getElementById('resetButton3D').addEventListener('click', () => {
         game.reset();
-        switchCameraPerspective(); // Set camera to red player's perspective
+        switchCameraPerspective();
         render3D();
     });
 
@@ -109,12 +100,11 @@ window.addEventListener('load', () => {
      * @param {number} col the column of the cell
      */
     function handleSquareClick(row, col) {
-        if (game.isGameOver) { return; }
+        if (game.isGameOver) return;
         const previousPlayer = game.currentPlayer;
         if (!game.selectPiece(row, col) && !game.makeMove(row, col)) {
             game.deselectPiece();
         }
-        // Check if player switched after move
         if (previousPlayer !== game.currentPlayer) {
             switchCameraPerspective();
         }
@@ -125,15 +115,12 @@ window.addEventListener('load', () => {
      * Switch camera perspective based on current player
      */
     function switchCameraPerspective() {
-        const currentPlayer = game.currentPlayer;
-        
-        if (currentPlayer === 'red') {
+        if (game.currentPlayer === 'red') {
             camera.position.set(0, 8, 10);
-            controls.target.set(0, 0, 0);
         } else {
             camera.position.set(0, 8, -10);
-            controls.target.set(0, 0, 0);
         }
+        controls.target.set(0, 0, 0);
         controls.update();
     }
 
@@ -142,8 +129,9 @@ window.addEventListener('load', () => {
      * @returns {THREE.Group} the table group
      */
     function createTable() {
-        const tableGroup = new THREE.Group();
+        tableGroup = new THREE.Group();
 
+        // Create table top
         const tableTopGeometry = new THREE.BoxGeometry(14, 0.3, 14);
         const tableTopMaterial = new THREE.MeshLambertMaterial({ color: 0x784E31 });
         const tableTop = new THREE.Mesh(tableTopGeometry, tableTopMaterial);
@@ -152,6 +140,7 @@ window.addEventListener('load', () => {
         tableTop.receiveShadow = true;
         tableGroup.add(tableTop);
 
+        // Create table legs
         const legGeometry = new THREE.BoxGeometry(1.0, 3.5, 1.0);
         const legMaterial = new THREE.MeshLambertMaterial({ color: 0x654321 });
 
@@ -201,15 +190,12 @@ window.addEventListener('load', () => {
         for (let row = 0; row < boardSize; row++) {
             for (let col = 0; col < boardSize; col++) {
                 const isLightSquare = (row + col) % 2 === 0;
-                
-                // Increased height from 0.08 to 0.25 for more depth
                 const squareGeometry = new THREE.BoxGeometry(squareSize, 0.25, squareSize);
                 const squareMaterial = isLightSquare ? lightSquareMaterial : darkSquareMaterial;
                 const square = new THREE.Mesh(squareGeometry, squareMaterial);
                 
                 const x = (col * squareSize) - boardOffset;
                 const z = (row * squareSize) - boardOffset;
-                // Adjusted y position to account for increased height
                 square.position.set(x, 0.275, z);
                 
                 square.userData = { row, col, originalMaterial: squareMaterial };
@@ -230,7 +216,6 @@ window.addEventListener('load', () => {
      */
     function createBoardBorder(squareSize, boardSize, boardOffset) {
         const borderWidth = 0.2;
-        // Increased border height from 0.12 to 0.3 to match the new board depth
         const borderHeight = 0.3;
         const totalBoardSize = boardSize * squareSize;
         const borderMaterial = new THREE.MeshLambertMaterial({ color: 0x000000 });
@@ -238,7 +223,6 @@ window.addEventListener('load', () => {
         // Top border
         const topBorderGeometry = new THREE.BoxGeometry(totalBoardSize + borderWidth * 2, borderHeight, borderWidth);
         const topBorder = new THREE.Mesh(topBorderGeometry, borderMaterial);
-        // Adjusted y position from 0.125 to 0.275 to match new board height
         topBorder.position.set(0, 0.275, -boardOffset - squareSize/2 - borderWidth/2);
         topBorder.castShadow = true;
         topBorder.receiveShadow = true;
@@ -311,7 +295,6 @@ window.addEventListener('load', () => {
                     
                     const x = (col * squareSize) - boardOffset;
                     const z = (row * squareSize) - boardOffset;
-                    // Adjusted y position from 0.2 to 0.475 to sit on top of the thicker board
                     piece.position.set(x, 0.475, z); 
                     
                     piece.userData = { row, col, color: gamepiece.color, isKing: gamepiece.isKing };
@@ -326,7 +309,7 @@ window.addEventListener('load', () => {
     }
 
     /**
-     * Add lighting to the scene
+     * Adds lighting to the scene
      */
     function addLighting() {
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
@@ -350,10 +333,9 @@ window.addEventListener('load', () => {
     }
 
     /**
-     * Render the overhead view of the board
+     * Renders the overhead view of the board
      */
     function renderOverheadView() {
-        // Create orthographic camera for top-down view
         const size = 5.5;
         overheadViewCamera = new THREE.OrthographicCamera(
             -size, size, size, -size, 0.1, 100
@@ -367,7 +349,6 @@ window.addEventListener('load', () => {
         overheadViewRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
         const overheadViewContainer = document.getElementById('overheadView');
-        
         while (overheadViewContainer.firstChild) {
             overheadViewContainer.removeChild(overheadViewContainer.firstChild);
         }
@@ -401,7 +382,6 @@ window.addEventListener('load', () => {
             selectedPiecePointLight = null;
         }
         
-        // Clear ghost pieces
         clearGhostPieces();
         
         if (pieces) {
@@ -422,7 +402,6 @@ window.addEventListener('load', () => {
     function clearGhostPieces() {
         ghostPieces.forEach(ghostPiece => {
             if (ghostPiece) {
-                // Remove the ghost light if it exists
                 if (ghostPiece.userData.ghostLight) {
                     scene.remove(ghostPiece.userData.ghostLight);
                 }
