@@ -86,19 +86,16 @@ export class CheckersGame {
         const moves = [];
 
         if (piece.isKing) {
-            // Kings can move in all four diagonal directions
             this.checkDirection(row, col, -1, -1, moves);
             this.checkDirection(row, col, -1, 1, moves);
             this.checkDirection(row, col, 1, -1, moves);
             this.checkDirection(row, col, 1, 1, moves);
         } else {
             if (piece.color === 'red') {
-                // Red pieces move towards row 0
                 this.checkDirection(row, col, -1, -1, moves);
                 this.checkDirection(row, col, -1, 1, moves);
             }
             if (piece.color === 'black') {
-                // Black pieces move towards row 7
                 this.checkDirection(row, col, 1, -1, moves);
                 this.checkDirection(row, col, 1, 1, moves);
             }
@@ -112,12 +109,12 @@ export class CheckersGame {
         const newRow = row + rowDir; 
         const newCol = col + colDir;
 
-        // Normal move
+    
         if (this.isOnBoard(newRow, newCol) && !this.board[newRow][newCol]) {
             moves.push({ row: newRow, col: newCol });
         }
 
-        // Capture move
+     
         const jumpRow = row + 2 * rowDir;
         const jumpCol = col + 2 * colDir;
         if (this.isOnBoard(jumpRow, jumpCol) &&
@@ -139,8 +136,6 @@ export class CheckersGame {
      */
     makeMove(row, col) {
         if (!this.selectedPiece) return false;
-
-        // Find the move in validMoves
         let move = null;
         for (let i = 0; i < this.validMoves.length; i++) {
             if (this.validMoves[i].row === row && this.validMoves[i].col === col) {
@@ -153,17 +148,13 @@ export class CheckersGame {
         const fromRow = this.selectedPiece.row;
         const fromCol = this.selectedPiece.col;
         const piece = this.board[fromRow][fromCol];
-
-        // Move piece
         this.board[fromRow][fromCol] = null;
         this.board[row][col] = piece;
 
-        // Handle a capture
         if (move.capture) {
             this.board[move.capture.row][move.capture.col] = null;
         }
 
-        // Turn piece into king
         if ((piece.color === 'red' && row === 0) || (piece.color === 'black' && row === 7)) {
             piece.isKing = true;
         }
@@ -193,11 +184,12 @@ export class CheckersGame {
         return row >= 0 && row < 8 && col >= 0 && col < 8;
     }
 
-    // TODO: Implement force Jumps
+    
 
     /**
      * Check if the current player has any available jumps (captures).
      * @returns {boolean} true if any jumps are available for the current player
+     * Implementation of Force Jump Rule
      */
     hasForceJumps() {
         for (let row = 0; row < 8; row++) {
@@ -227,19 +219,17 @@ export class CheckersGame {
         const jumpMoves = [];
 
         if (piece.isKing) {
-            // Kings can jump in all four diagonal directions
+   
             this.checkForJumpInDirection(row, col, -1, -1, jumpMoves);
             this.checkForJumpInDirection(row, col, -1, 1, jumpMoves);
             this.checkForJumpInDirection(row, col, 1, -1, jumpMoves);
             this.checkForJumpInDirection(row, col, 1, 1, jumpMoves);
         } else {
             if (piece.color === 'red') {
-                // Red pieces move towards row 0
                 this.checkForJumpInDirection(row, col, -1, -1, jumpMoves);
                 this.checkForJumpInDirection(row, col, -1, 1, jumpMoves);
             }
             if (piece.color === 'black') {
-                // Black pieces move towards row 7
                 this.checkForJumpInDirection(row, col, 1, -1, jumpMoves);
                 this.checkForJumpInDirection(row, col, 1, 1, jumpMoves);
             }
@@ -263,7 +253,6 @@ export class CheckersGame {
         const jumpRow = row + 2 * rowDir;
         const jumpCol = col + 2 * colDir;
 
-        // Check if there's an opponent piece to jump over and empty space to land
         if (this.isOnBoard(jumpRow, jumpCol) &&
             !this.board[jumpRow][jumpCol] &&
             this.board[adjacentRow] && this.board[adjacentRow][adjacentCol] &&
@@ -284,24 +273,18 @@ export class CheckersGame {
      * @returns {Array} filtered moves according to force jump rules
      */
     applyForceJumpRule(allMoves, pieceRow, pieceCol) {
-        // Check if this piece has any jumps
         const jumpMoves = this.getJumpMovesForPiece(pieceRow, pieceCol);
         
-        // If this piece can jump, only return jump moves
         if (jumpMoves.length > 0) {
             return jumpMoves;
         }
-        
-        // If this piece can't jump but other pieces can, return empty array
+
         if (this.hasForceJumps()) {
             return [];
         }
         
-        // No force jumps available, return all moves
         return allMoves;
     }
-
-    // TODO: Implement Multi-Jumps
 
     /**
      * Check if a piece can continue jumping from its current position.
@@ -315,6 +298,8 @@ export class CheckersGame {
         return jumpMoves.length > 0;
     }
 
+
+
     /**
      * Handle multi-jump scenario after a capture move.
      * This function should be called after a successful jump to check for additional jumps.
@@ -323,14 +308,12 @@ export class CheckersGame {
      * @returns {Object} multi-jump status with continue flag and available moves
      */
     handleMultiJump(row, col) {
-        // Check if the piece can continue jumping
         if (this.canContinueJumping(row, col)) {
-            // Get the additional jump moves available
             const additionalJumps = this.getJumpMovesForPiece(row, col);
             
             return {
                 canContinue: true,
-                mustContinue: true,  // In checkers, multi-jumps are mandatory
+                mustContinue: true, 
                 availableMoves: additionalJumps,
                 jumpingPiece: { row, col }
             };
@@ -354,28 +337,21 @@ export class CheckersGame {
      * @returns {Object} result of the multi-jump execution
      */
     executeMultiJump(fromRow, fromCol, toRow, toCol) {
-        // This function works with makeMove() to handle the multi-jump flow
-        // The piece should already be moved to (toRow, toCol) by makeMove()
-        
-        // Check for additional jumps after this capture
         const multiJumpStatus = this.handleMultiJump(toRow, toCol);
         
         if (multiJumpStatus.canContinue) {
-            // Keep the same piece selected for the next jump
-            // Don't switch players yet - they must continue jumping
             return {
                 continueJumping: true,
                 selectedPiece: { row: toRow, col: toCol },
                 validMoves: multiJumpStatus.availableMoves,
-                switchPlayer: false  // Don't switch until all jumps are complete
+                switchPlayer: false
             };
         } else {
-            // No more jumps available, end the turn
             return {
                 continueJumping: false,
                 selectedPiece: null,
                 validMoves: [],
-                switchPlayer: true  // Now switch players
+                switchPlayer: true  
             };
         }
     }

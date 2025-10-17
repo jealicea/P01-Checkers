@@ -295,25 +295,21 @@ window.addEventListener('load', () => {
                     } else {
                         material = gamepiece.color === 'red' ? redPieceMaterial : blackPieceMaterial;
                     }
-
-                    // Create the main piece (cylinder)
+                    
                     const piece = new THREE.Mesh(pieceGeometry, material);
                     
-                    // Add crown elements to ALL pieces
-                    // Add crown base (smaller cylinder on top)
                     const crownBase = new THREE.Mesh(crownBaseGeometry, material);
                     crownBase.position.y = pieceHeight * 0.7;
                     piece.add(crownBase);
                     
-                    // Add crown gems (ring of small spheres around the edge of main cylinder)
                     const gemCount = 6;
-                    const gemRadius = (pieceRadius + pieceRadius * 0.7) / 2; // Halfway between main cylinder edge and crown base edge
+                    const gemRadius = (pieceRadius + pieceRadius * 0.7) / 2; 
                     for (let i = 0; i < gemCount; i++) {
                         const angle = (i / gemCount) * Math.PI * 2;
                         const gem = new THREE.Mesh(crownGemGeometry, material);
                         gem.position.x = Math.cos(angle) * gemRadius;
                         gem.position.z = Math.sin(angle) * gemRadius;
-                        gem.position.y = pieceHeight * 0.5; // At the height of the main cylinder's top edge
+                        gem.position.y = pieceHeight * 0.5; 
                         piece.add(gem);
                     }
                     
