@@ -258,6 +258,7 @@ window.addEventListener('load', () => {
 
     /**
      * Create checkers pieces and add them to the scene
+     * TODO: Use three cylinder geometries for pieces and crown SVG for kings
      */
     function createCheckersPieces() {
         clearPieces();
@@ -282,6 +283,10 @@ window.addEventListener('load', () => {
         const blackKingMaterial = new THREE.MeshLambertMaterial({ color: 0x6c757d });
 
         const pieceGeometry = new THREE.CylinderGeometry(pieceRadius, pieceRadius, pieceHeight, 16);
+        
+        // Crown geometries for king pieces
+        const crownBaseGeometry = new THREE.CylinderGeometry(pieceRadius * 0.7, pieceRadius * 0.7, pieceHeight * 0.4, 16);
+        const crownGemGeometry = new THREE.SphereGeometry(pieceRadius * 0.15, 8, 8);
 
         for (let row = 0; row < boardSize; row++) {
             for (let col = 0; col < boardSize; col++) {
@@ -294,7 +299,26 @@ window.addEventListener('load', () => {
                         material = gamepiece.color === 'red' ? redPieceMaterial : blackPieceMaterial;
                     }
 
+                    // Create the main piece (cylinder)
                     const piece = new THREE.Mesh(pieceGeometry, material);
+                    
+                    // Add crown elements to ALL pieces
+                    // Add crown base (smaller cylinder on top)
+                    const crownBase = new THREE.Mesh(crownBaseGeometry, material);
+                    crownBase.position.y = pieceHeight * 0.7;
+                    piece.add(crownBase);
+                    
+                    // Add crown gems (ring of small spheres around the edge of main cylinder)
+                    const gemCount = 6;
+                    const gemRadius = (pieceRadius + pieceRadius * 0.7) / 2; // Halfway between main cylinder edge and crown base edge
+                    for (let i = 0; i < gemCount; i++) {
+                        const angle = (i / gemCount) * Math.PI * 2;
+                        const gem = new THREE.Mesh(crownGemGeometry, material);
+                        gem.position.x = Math.cos(angle) * gemRadius;
+                        gem.position.z = Math.sin(angle) * gemRadius;
+                        gem.position.y = pieceHeight * 0.5; // At the height of the main cylinder's top edge
+                        piece.add(gem);
+                    }
                     
                     const x = (col * squareSize) - boardOffset;
                     const z = (row * squareSize) - boardOffset;
