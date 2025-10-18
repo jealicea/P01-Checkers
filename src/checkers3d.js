@@ -20,6 +20,11 @@ let selectedSquareMaterial
 let validMoveMaterial
 let selectedPiecePointLight
 let tableGroup
+let redPieceMaterial
+let blackPieceMaterial
+let redKingMaterial
+let blackKingMaterial
+let ghostMaterial
 
 /**
  * Loads the game and renders the board
@@ -33,6 +38,47 @@ window.addEventListener('load', () => {
 
     selectedSquareMaterial = new THREE.MeshLambertMaterial({ color: 0x00ff00, transparent: true, opacity: 0.5 });
     validMoveMaterial = new THREE.MeshLambertMaterial({ color: 0x0080ff, transparent: true, opacity: 0.3 });
+
+    redPieceMaterial = new THREE.MeshPhysicalMaterial({ 
+        color: 0xdc3545,
+        roughness: 0.1,
+        metalness: 0.0,
+        clearcoat: 0.8,
+        clearcoatRoughness: 0.1,
+        reflectivity: 0.9
+    });
+    blackPieceMaterial = new THREE.MeshPhysicalMaterial({ 
+        color: 0x343a40,
+        roughness: 0.1,
+        metalness: 0.0,
+        clearcoat: 0.8,
+        clearcoatRoughness: 0.1,
+        reflectivity: 0.9
+    }); 
+    redKingMaterial = new THREE.MeshPhysicalMaterial({ 
+        color: 0xffd700, // Gold
+        roughness: 0.05,
+        metalness: 0.0,
+        clearcoat: 1.0,
+        clearcoatRoughness: 0.05,
+        reflectivity: 1.0
+    });
+    blackKingMaterial = new THREE.MeshPhysicalMaterial({ 
+        color: 0xc0c0c0, // Silver
+        roughness: 0.05,
+        metalness: 0.0,
+        clearcoat: 1.0,
+        clearcoatRoughness: 0.05,
+        reflectivity: 1.0
+    });
+    ghostMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0x66ff66,
+        emissive: 0x003300,
+        transparent: true, 
+        opacity: 0.6,
+        roughness: 0.3,
+        metalness: 0.1
+    });
 
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0xf0f0f0);
@@ -133,7 +179,14 @@ window.addEventListener('load', () => {
 
         // Create table top
         const tableTopGeometry = new THREE.BoxGeometry(14, 0.3, 14);
-        const tableTopMaterial = new THREE.MeshLambertMaterial({ color: 0x784E31 });
+        const tableTopMaterial = new THREE.MeshPhysicalMaterial({
+            color: 0x6d4c2f,
+            roughness: 0.4,
+            metalness: 0.0,
+            clearcoat: 0.6,
+            clearcoatRoughness: 0.3,
+            reflectivity: 0.3
+        });
         const tableTop = new THREE.Mesh(tableTopGeometry, tableTopMaterial);
         tableTop.position.y = 0;
         tableTop.castShadow = true;
@@ -142,7 +195,14 @@ window.addEventListener('load', () => {
 
         // Create table legs
         const legGeometry = new THREE.BoxGeometry(1.0, 3.5, 1.0);
-        const legMaterial = new THREE.MeshLambertMaterial({ color: 0x654321 });
+        const legMaterial = new THREE.MeshPhysicalMaterial({ 
+            color: 0x4a3022,
+            roughness: 0.6,
+            metalness: 0.0,
+            clearcoat: 0.4,
+            clearcoatRoughness: 0.5,
+            reflectivity: 0.2
+        });
 
         // Front left leg
         const leg1 = new THREE.Mesh(legGeometry, legMaterial);
@@ -150,7 +210,7 @@ window.addEventListener('load', () => {
         leg1.castShadow = true;
         tableGroup.add(leg1);
 
-        // Front right leg
+        // Front right leg 
         const leg2 = new THREE.Mesh(legGeometry, legMaterial);
         leg2.position.set(6.3, -1.75, 6.3);
         leg2.castShadow = true;
@@ -184,8 +244,23 @@ window.addEventListener('load', () => {
 
         createBoardBorder(squareSize, boardSize, boardOffset);
 
-        const lightSquareMaterial = new THREE.MeshLambertMaterial({ color: 0xf0d9b5 });
-        const darkSquareMaterial = new THREE.MeshLambertMaterial({ color: 0xb58863 });
+        const lightSquareMaterial = new THREE.MeshPhysicalMaterial({ 
+            color: 0xf5e6d3,
+            roughness: 0.6,
+            metalness: 0.0,
+            clearcoat: 0.2,
+            clearcoatRoughness: 0.8,
+            reflectivity: 0.1
+        });
+        
+        const darkSquareMaterial = new THREE.MeshPhysicalMaterial({ 
+            color: 0x5d4037,
+            roughness: 0.7,
+            metalness: 0.0,
+            clearcoat: 0.3,
+            clearcoatRoughness: 0.6,
+            reflectivity: 0.15
+        });
 
         for (let row = 0; row < boardSize; row++) {
             for (let col = 0; col < boardSize; col++) {
@@ -218,7 +293,14 @@ window.addEventListener('load', () => {
         const borderWidth = 0.2;
         const borderHeight = 0.3;
         const totalBoardSize = boardSize * squareSize;
-        const borderMaterial = new THREE.MeshLambertMaterial({ color: 0x000000 });
+        const borderMaterial = new THREE.MeshPhysicalMaterial({ 
+            color: 0x2e1e0f,
+            roughness: 0.8,
+            metalness: 0.0,
+            clearcoat: 0.4,
+            clearcoatRoughness: 0.7,
+            reflectivity: 0.1
+        });
 
         // Top border
         const topBorderGeometry = new THREE.BoxGeometry(totalBoardSize + borderWidth * 2, borderHeight, borderWidth);
@@ -274,16 +356,9 @@ window.addEventListener('load', () => {
             }
         }
 
-        const redPieceMaterial = new THREE.MeshLambertMaterial({ color: 0xdc3545 });
-        const blackPieceMaterial = new THREE.MeshLambertMaterial({ color: 0x343a40 }); 
-        const redKingMaterial = new THREE.MeshLambertMaterial({ color: 0xffd700 });
-        const blackKingMaterial = new THREE.MeshLambertMaterial({ color: 0xc0c0c0 }); 
-
-        const pieceGeometry = new THREE.CylinderGeometry(pieceRadius, pieceRadius, pieceHeight, 16);
-        
-        // Crown geometries for king pieces
-        const crownBaseGeometry = new THREE.CylinderGeometry(pieceRadius * 0.7, pieceRadius * 0.7, pieceHeight * 0.4, 16);
-        const crownGemGeometry = new THREE.SphereGeometry(pieceRadius * 0.15, 8, 8);
+        const pieceGeometry = new THREE.CylinderGeometry(pieceRadius, pieceRadius, pieceHeight, 100);
+        const innerCylinderGeometry = new THREE.CylinderGeometry(pieceRadius * 0.6, pieceRadius * 0.6, pieceHeight + 0.05, 16);
+        const ringGeometry = new THREE.TorusGeometry(pieceRadius * 0.85, pieceRadius * 0.15, 16, 100);
 
         for (let row = 0; row < boardSize; row++) {
             for (let col = 0; col < boardSize; col++) {
@@ -295,23 +370,16 @@ window.addEventListener('load', () => {
                     } else {
                         material = gamepiece.color === 'red' ? redPieceMaterial : blackPieceMaterial;
                     }
-                    
+
                     const piece = new THREE.Mesh(pieceGeometry, material);
-                    
-                    const crownBase = new THREE.Mesh(crownBaseGeometry, material);
-                    crownBase.position.y = pieceHeight * 0.7;
-                    piece.add(crownBase);
-                    
-                    const gemCount = 6;
-                    const gemRadius = (pieceRadius + pieceRadius * 0.7) / 2; 
-                    for (let i = 0; i < gemCount; i++) {
-                        const angle = (i / gemCount) * Math.PI * 2;
-                        const gem = new THREE.Mesh(crownGemGeometry, material);
-                        gem.position.x = Math.cos(angle) * gemRadius;
-                        gem.position.z = Math.sin(angle) * gemRadius;
-                        gem.position.y = pieceHeight * 0.5; 
-                        piece.add(gem);
-                    }
+                    const innerCylinder = new THREE.Mesh(innerCylinderGeometry, material);
+                    innerCylinder.position.y = 0.1;
+                    piece.add(innerCylinder);
+
+                    const ring = new THREE.Mesh(ringGeometry, material);
+                    ring.rotation.x = -Math.PI / 2;
+                    ring.position.y = 0.1;
+                    piece.add(ring);
                     
                     const x = (col * squareSize) - boardOffset;
                     const z = (row * squareSize) - boardOffset;
@@ -456,16 +524,6 @@ window.addEventListener('load', () => {
         const pieceRadius = 0.5;
         const pieceHeight = 0.15;
         
-
-        let ghostMaterial = new THREE.MeshStandardMaterial({ 
-            color: 0x66ff66,
-            emissive: 0x003300,
-            transparent: true, 
-            opacity: 0.6,
-            roughness: 0.3,
-            metalness: 0.1
-        });
-
         const ghostGeometry = new THREE.CylinderGeometry(pieceRadius, pieceRadius, pieceHeight, 16);
 
         game.validMoves.forEach(move => {
